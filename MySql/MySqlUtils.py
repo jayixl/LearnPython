@@ -7,9 +7,9 @@ Created on Sun Nov 08 13:23:32 2015
 import MySQLdb
 import os
 
-host = 'localhost'
-user = 'root'
-password = '1234'
+_host = 'localhost'
+_user = 'root'
+_password = '1234'
 db = 'netease_stock'
 db_columns = ['symbol', 'date', 'name', 'topen', 'tclose', 'high', 'low', 
               'lclose', 'chg', 'pchg', 'turnover', 'voturnover', 'vaturnover', 
@@ -19,11 +19,30 @@ db_columns = ['symbol', 'date', 'name', 'topen', 'tclose', 'high', 'low',
 def mysql_test():
         
     try:
-        conn = MySQLdb.connect(host=host,user=user,passwd=password,db=db,port=3306)
+        conn = MySQLdb.connect(host=_host,user=_user,passwd=_password,db=db,port=3306)
         cur = conn.cursor()
         cur.execute('select %s from histrade_day' % (','.join(db_columns), ))
         top1 = cur.fetchone()
         print top1
+        
+    except MySQLdb.Error,e:
+        print "Mysql Error %d: %s" % (e.args[0], e.args[1])
+        
+    finally:
+        cur.close()
+        conn.close()
+
+def mysql_generic_query(query):
+    
+    '''
+    generic query
+    '''
+    try:
+        conn = MySQLdb.connect(host=_host,user=_user,passwd=_password,db=db,port=3306)
+        cur = conn.cursor()
+        cur.execute(query)
+        res = cur.fetchall()
+        return res
         
     except MySQLdb.Error,e:
         print "Mysql Error %d: %s" % (e.args[0], e.args[1])
@@ -51,7 +70,7 @@ def mysql_histrade_query(symbol, start, end):
         WHERE symbol = '%s' AND date >= '%s' AND date <= '%s' ''' % (','.join(db_columns), symbol, start, end)
                 
     try:
-        conn = MySQLdb.connect(host=host, user=user, passwd=password, db=db, port=3306)
+        conn = MySQLdb.connect(host=_host, user=_user, passwd=_password, db=db, port=3306)
         cur = conn.cursor()
         cur.execute(query)
         #print 'there are %s rows record' % count

@@ -1,0 +1,5 @@
+Pandas,
+
+indexing and selecting data, http://pandas.pydata.org/pandas-docs/version/0.17.0/indexing.html#indexing
+
+.ix supports mixed integer and label based access.

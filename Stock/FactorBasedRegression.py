@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Jul 18 00:03:22 2016
+
 @author: jayjin
 """
 
@@ -8,13 +10,16 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.insert(1, '../MySql')
-sys.path.insert(1, '../Stock')
+import DateTimeUtils
 
+sys.path.insert(1, '../MySql')
 import MySqlUtils
 
 
-def SingleStockRegDataGet(df, factors, end_date, start_offset, shift = 20):
+_factors = ['tclose', 'ma10']
+
+
+def SingleStockRegDataGet(df, factors, training_days, shift = 20):
     """ 
     get factor data from original df
         
@@ -24,23 +29,14 @@ def SingleStockRegDataGet(df, factors, end_date, start_offset, shift = 20):
         data source
     factors : string list
         selected factors
-    end_date : string
-        end date, format 'yyyy-MM-dd'        
-    start_offset : integer
-        offset from expected start date to given end date
+    training_days : string list
+        end date, format ['yyyy-MM-dd', ...]
     shift : integer
         offset of days to calculate forward price    
     """
-    
-    # maybe we cant find end_date, locate the nearest earlier date
-    # end_date = df['date'][df['date'] <= end_date][-1] # equivalent way
-    end_date = df.index[df.index <= end_date][-1]
-    
-    end_loc = df.index.get_loc(end_date)
-    start_loc = max(end_loc - start_offset, 0)   
-    
+
     # here we are using mixed integer and label based access, only .ix supports
-    df = df.ix[start_loc:end_loc, factors] 
+    df = df.ix[training_days, factors] 
     
     df['fwdPrice'] = df['tclose'].shift(-shift)
     df = df[:-shift]
@@ -75,32 +71,28 @@ def StockRegDataGet(universe, training_days):
     '''
     
     data_all = {}
+    start_day = training_days[0]
+    end_day = training_days[-1]
     
     for symbol in universe:
-        print symbol       
+        query_res = MySqlUtils.mysql_histrade_query(symbol, start_day, end_day)
+        data = [[col for col in row] for row in query_res]
+        df = pd.DataFrame(data, index = [t[1] for t in data], columns = MySqlUtils.db_columns)
         
+        # we can't get column name info by lambda
+        #df = df.apply(lambda col: pd.to_numeric(col, errors='coerce'))
+        #df = df.apply(lambda col: col.astype('float'))
+        for col_name in df.columns:
+            if (col_name != 'symbol' and col_name != 'date' and col_name != 'name'):
+                df[col_name] = pd.to_numeric(df[col_name], errors='coerce') 
+                df[col_name] = df[col_name].interpolate()
+                
+        
+        df2 = SingleStockRegDataGet(df, _factors, training_days, 5)
+        print df2
     
-    return None
-    
+    return data_all
 
-query_res = MySqlUtils.mysql_histrade_query('000001', '1995-01-01', '1995-03-03')
-print 'get %d rows from db' % len(query_res)
-
-# type(query_res) is tuple tuple
-data = [[col for col in row] for row in query_res]
-df = pd.DataFrame(data, index = [t[1] for t in data], columns = MySqlUtils.db_columns)
-
-# we can't get column name info by lambda
-#df = df.apply(lambda col: pd.to_numeric(col, errors='coerce'))
-#df = df.apply(lambda col: col.astype('float'))
-for col_name in df.columns:
-    if (col_name != 'symbol' and col_name != 'date' and col_name != 'name'):
-        df[col_name] = pd.to_numeric(df[col_name], errors='coerce') 
-        df[col_name] = df[col_name].interpolate()
-
-factors = ['tclose', 'ma10']
-df2 = SingleStockRegDataGet(df, factors, '1995-02-29', 10, 5)
-print df2
-
-#print string.join(MySqlUtils.db_columns, ',')
-#print ','.join(["'%s'" % col for col in MySqlUtils.db_columns])
+prev_training_days = DateTimeUtils.get_prev_training_days('2015-02-05', 100)
+print len(prev_training_days)
+StockRegDataGet(['000001'], prev_training_days)   
