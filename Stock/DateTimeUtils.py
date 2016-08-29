@@ -28,14 +28,13 @@ def _get_trading_days():
     global _trading_days_sorted
     _trading_days_sorted = np.array(sorted([row[0] for row in all_trading_days]))
     _trading_days_set.update(_trading_days_sorted)
-    print _trading_days_sorted
+    #print _trading_days_sorted
 
 def is_valid_trading_day(day):
     if 0 == len(_trading_days_set):
         _get_trading_days()
     
     return day in _trading_days_set
-    
     
 def get_prev_training_days(current_day, prev_num):
     if 0 == len(_trading_days_set):

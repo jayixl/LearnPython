@@ -15,3 +15,5 @@ print str.replace(' ', '_')
 
 print str.find('string')
 
+print round(0.3)
+print round(0.5)
