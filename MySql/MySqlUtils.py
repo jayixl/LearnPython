@@ -5,7 +5,6 @@ Created on Sun Nov 08 13:23:32 2015
 @author: jayjin
 """
 import MySQLdb
-import os
 import pandas as pd
 
 _host = 'localhost'
@@ -125,5 +124,4 @@ def fund_flow_query(symbol, start, end):
 
     return None
 
-
-mysql_test()
+# mysql_test()
