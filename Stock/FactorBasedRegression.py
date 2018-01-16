@@ -173,5 +173,4 @@ def predict():
 
     print score
 
-
 predict()

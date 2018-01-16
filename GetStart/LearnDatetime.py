@@ -4,12 +4,10 @@ Created on Fri Jul 15 23:20:21 2016
 
 @author: jayjin
 """
-
-import time
 import sys
-from datetime import date
-from datetime import timedelta
-import DateTimeUtils
+
+sys.path.insert(1, '../Stock')
+
 import pandas as pd
 import numpy as np
 
